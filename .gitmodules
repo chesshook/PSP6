@@ -1,0 +1,3 @@
+[submodule "upstream/PPSSPP"]
+	path = upstream/PPSSPP
+	url = https://github.com/hrydgard/PPSSPP.git
