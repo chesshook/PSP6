@@ -58,14 +58,14 @@ if errorlevel 1 (
 )
 
 echo [PSP6] Applying MinGW text backend compatibility patch...
-git -C "upstream\\PPSSPP" apply --reverse --check "..\\..\\patches\\0002-mingw-gdi-text-backend.patch" >nul 2>nul
+git -C "upstream\PPSSPP" apply --reverse --check "..\..\patches\0002-mingw-gdi-text-backend.patch" >nul 2>nul
 if errorlevel 1 (
-    git -C "upstream\\PPSSPP" apply --check "..\\..\\patches\\0002-mingw-gdi-text-backend.patch"
+    git -C "upstream\PPSSPP" apply --check "..\..\patches\0002-mingw-gdi-text-backend.patch"
     if errorlevel 1 (
         echo [ERROR] MinGW text backend patch does not match the pinned upstream source.
         exit /b 1
     )
-    git -C "upstream\\PPSSPP" apply "..\\..\\patches\\0002-mingw-gdi-text-backend.patch"
+    git -C "upstream\PPSSPP" apply "..\..\patches\0002-mingw-gdi-text-backend.patch"
     if errorlevel 1 (
         echo [ERROR] Failed to apply the MinGW text backend patch.
         exit /b 1
