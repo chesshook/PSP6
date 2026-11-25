@@ -1,7 +1,7 @@
 diff --git a/Common/Render/Text/draw_text.cpp b/Common/Render/Text/draw_text.cpp
 --- a/Common/Render/Text/draw_text.cpp
 +++ b/Common/Render/Text/draw_text.cpp
-@@ -27,7 +27,9 @@
+@@ -26,8 +26,10 @@
  #include "Common/Render/Text/draw_text_win.h"
  #include "Common/Render/Text/draw_text_cocoa.h"
  #include "Common/Render/Text/draw_text_android.h"
@@ -12,7 +12,7 @@ diff --git a/Common/Render/Text/draw_text.cpp b/Common/Render/Text/draw_text.cpp
  #include "Common/StringUtils.h"
  #include "Common/OSVersion.h"
  
-@@ -396,15 +398,21 @@ TextDrawer *TextDrawer::Create(Draw::DrawContext *draw) {
+@@ -395,18 +395,24 @@ TextDrawer *TextDrawer::Create(Draw::DrawContext *draw) {
  #if defined(__LIBRETRO__)
  	// No text drawer
  #elif PPSSPP_PLATFORM(UWP)
@@ -40,7 +40,7 @@ diff --git a/Common/Render/Text/draw_text.cpp b/Common/Render/Text/draw_text.cpp
 diff --git a/Common/Render/Text/draw_text_uwp.h b/Common/Render/Text/draw_text_uwp.h
 --- a/Common/Render/Text/draw_text_uwp.h
 +++ b/Common/Render/Text/draw_text_uwp.h
-@@ -6,7 +6,7 @@
+@@ -5,7 +5,7 @@
  #include <map>
  #include "Common/Render/Text/draw_text.h"
  
@@ -52,7 +52,7 @@ diff --git a/Common/Render/Text/draw_text_uwp.h b/Common/Render/Text/draw_text_u
 diff --git a/Common/Render/Text/draw_text_uwp.cpp b/Common/Render/Text/draw_text_uwp.cpp
 --- a/Common/Render/Text/draw_text_uwp.cpp
 +++ b/Common/Render/Text/draw_text_uwp.cpp
-@@ -11,7 +11,7 @@
+@@ -10,7 +10,7 @@
  #include "Common/StringUtils.h"
  #include "Common/File/Path.h"
  
