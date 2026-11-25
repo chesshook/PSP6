@@ -1,0 +1,7 @@
+# PSP6 build output
+/build-*/
+/dist/
+/upstream/PPSSPP/
+/CMakeUserPresets.json
+*.user
+*.suo
