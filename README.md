@@ -25,10 +25,10 @@ From a fresh clone:
 ```bat
 git clone https://github.com/chesshook/PSP6.git
 cd PSP6
-build-psp6-mingw.bat
+build.cmd
 ```
 
-The build script initializes the pinned source and its dependencies, configures a Release build for the local x64 CPU, enables GCC link-time optimization and dead-section removal, and copies the resulting executable to `dist/PSP6.exe`.
+The build script initializes the pinned source and its dependencies, selects PPSSPP's native Win32 frontend (so SDL3 is not required), builds bundled third-party libraries, and enables GCC `-static`, `-static-libgcc`, `-static-libstdc++`, `-O3`, LTO, and dead-section removal. It runs upstream unit tests and copies the executable to `dist/PSP6.exe`. Windows system DLLs such as graphics, audio, and OS APIs remain normal Windows imports; they are not part of the GCC runtime.
 
 The `-march=native` build is machine-specific: the resulting executable is tuned for the PC that compiles it and may not run on older CPUs. Do not distribute that binary as a universal x64 build.
 
