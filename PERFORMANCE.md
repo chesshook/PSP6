@@ -36,7 +36,8 @@ For each patch:
 ## Current optimization baseline
 
 - Pinned upstream: PPSSPP master revision `ee4594feff26e6a5c0bc2accfed19e9c5c117083`.
-- Release compiler profile: GCC `-O3`, LTO, dead-section elimination, and optional native CPU tuning.
+- Release compiler profile: GCC `-O3`, LTO, dead-section elimination, optional native CPU tuning, and static GCC/C++ runtime linking.
+- Windows configuration selects the native Win32 frontend and skips the unnecessary SDL3 package requirement. Bundled zlib, PNG, FFmpeg, zstd, libchdr, libzip, and related dependencies are preferred over system DLL packages; Windows OS/API DLL imports remain expected.
 - Floating-point semantics remain conservative; no fast-math.
 - First PSP6 core patch: cache the event-queue tail in `Core/CoreTiming.cpp`. Monotonic/equal-time insertions now append in O(1); out-of-order insertions retain the original sorted scan. Equal-time FIFO ordering is preserved, removal paths maintain the cache, and save-state loading rebuilds it without changing the serialized format.
 - Expected impact is limited to workloads that frequently schedule events at or after the current tail. No FPS or percentage gain is claimed before instrumented testing.
