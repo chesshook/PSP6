@@ -16,7 +16,7 @@ It tracks the upstream emulator as a pinned Git submodule instead of copying tho
 Requirements:
 
 - Git (with submodule support)
-- MinGW-w64 x86_64 UCRT GCC 15.2 or compatible
+- MinGW-w64 x86_64 UCRT GCC 15.2 or compatible (including `gcc-ar` and `gcc-ranlib`)
 - CMake 3.16+
 - Ninja
 
@@ -28,7 +28,7 @@ cd PSP6
 build.cmd
 ```
 
-The build script initializes the pinned source and its dependencies, selects PPSSPP's native Win32 frontend (so SDL3 is not required), builds bundled third-party libraries, and enables GCC `-static`, `-static-libgcc`, `-static-libstdc++`, `-O3`, LTO, and dead-section removal. It runs upstream unit tests and copies the executable to `dist/PSP6.exe`. Windows system DLLs such as graphics, audio, and OS APIs remain normal Windows imports; they are not part of the GCC runtime.
+The build script initializes the pinned source and its dependencies, selects PPSSPP's native Win32 frontend (so SDL3 is not required), uses PPSSPP's Win32 GDI text backend on MinGW (avoiding Direct2D 1.3 interfaces not exposed by some MinGW SDKs), builds bundled third-party libraries, and uses GCC's LTO-aware `gcc-ar`/`gcc-ranlib` with `-static`, `-static-libgcc`, `-static-libstdc++`, `-O3`, LTO, and dead-section removal. It runs upstream unit tests and copies the executable to `dist/PSP6.exe`. Windows system DLLs such as graphics, audio, and OS APIs remain normal Windows imports; they are not part of the GCC runtime.
 
 The `-march=native` build is machine-specific: the resulting executable is tuned for the PC that compiles it and may not run on older CPUs. Do not distribute that binary as a universal x64 build.
 
