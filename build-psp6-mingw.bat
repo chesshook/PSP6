@@ -39,14 +39,14 @@ if errorlevel 1 (
 )
 
 echo [PSP6] Applying scheduler optimization...
-git -C "upstream\\PPSSPP" apply --reverse --check "..\\..\\patches\\0001-core-timing-tail-append.patch" >nul 2>nul
+git -C "upstream\PPSSPP" apply --reverse --check "..\..\patches\0001-core-timing-tail-append.patch" >nul 2>nul
 if errorlevel 1 (
-    git -C "upstream\\PPSSPP" apply --check "..\\..\\patches\\0001-core-timing-tail-append.patch"
+    git -C "upstream\PPSSPP" apply --check "..\..\patches\0001-core-timing-tail-append.patch"
     if errorlevel 1 (
         echo [ERROR] Scheduler patch does not match the pinned upstream source.
         exit /b 1
     )
-    git -C "upstream\\PPSSPP" apply "..\\..\\patches\\0001-core-timing-tail-append.patch"
+    git -C "upstream\PPSSPP" apply "..\..\patches\0001-core-timing-tail-append.patch"
     if errorlevel 1 (
         echo [ERROR] Failed to apply the PSP6 scheduler patch.
         exit /b 1
@@ -93,7 +93,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist "%BUILD_DIR%\\PPSSPPUnitTest.exe" (
+if not exist "%BUILD_DIR%\PPSSPPUnitTest.exe" (
     echo [ERROR] PPSSPPUnitTest.exe was not produced.
     exit /b 1
 )
