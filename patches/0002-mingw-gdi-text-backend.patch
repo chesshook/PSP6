@@ -1,0 +1,63 @@
+diff --git a/Common/Render/Text/draw_text.cpp b/Common/Render/Text/draw_text.cpp
+--- a/Common/Render/Text/draw_text.cpp
++++ b/Common/Render/Text/draw_text.cpp
+@@ -27,7 +27,9 @@
+ #include "Common/Render/Text/draw_text_win.h"
+ #include "Common/Render/Text/draw_text_cocoa.h"
+ #include "Common/Render/Text/draw_text_android.h"
+ #include "Common/Render/Text/draw_text_sdl.h"
++#if !defined(__MINGW32__)
+ #include "Common/Render/Text/draw_text_uwp.h"
++#endif
+ #include "Common/StringUtils.h"
+ #include "Common/OSVersion.h"
+ 
+@@ -396,15 +398,21 @@ TextDrawer *TextDrawer::Create(Draw::DrawContext *draw) {
+ #if defined(__LIBRETRO__)
+ 	// No text drawer
+ #elif PPSSPP_PLATFORM(UWP)
+ 	drawer = new TextDrawerUWP(draw);
+ #elif defined(_WIN32)
++	#if defined(__MINGW32__)
++	// MinGW's Windows headers do not expose the Direct2D 1.3 interfaces used by
++	// TextDrawerUWP. Use the supported Win32 GDI backend on this toolchain.
++	drawer = new TextDrawerWin32(draw);
++	#else
+ 	// If RenderDoc is active, we can't use the UWP drawer since it uses D3D11 to initialize D2D,
+ 	// and RenderDoc doesn't permit multiple graphics contexts.
+ 	// Also, this seems to cause failures under Windows 7, so let's gate on Win 10 to be safe.
+ 	if (IsRenderDocLoaded() || !IsWin10OrHigher()) {
+ 		drawer = new TextDrawerWin32(draw);
+ 	} else {
+ 		drawer = new TextDrawerUWP(draw);
+ 	}
++	#endif
+ #elif PPSSPP_PLATFORM(MAC) || PPSSPP_PLATFORM(IOS)
+ 	drawer = new TextDrawerCocoa(draw);
+ #elif PPSSPP_PLATFORM(ANDROID)
+ 	drawer = new TextDrawerAndroid(draw);
+ #elif USE_SDL3_TTF
+diff --git a/Common/Render/Text/draw_text_uwp.h b/Common/Render/Text/draw_text_uwp.h
+--- a/Common/Render/Text/draw_text_uwp.h
++++ b/Common/Render/Text/draw_text_uwp.h
+@@ -6,7 +6,7 @@
+ #include <map>
+ #include "Common/Render/Text/draw_text.h"
+ 
+-#if defined(_WIN32) && !defined(__LIBRETRO__)
++#if defined(_WIN32) && !defined(__LIBRETRO__) && !defined(__MINGW32__)
+ 
+ #include <d2d1_3.h>
+ #include <dwrite_3.h>
+diff --git a/Common/Render/Text/draw_text_uwp.cpp b/Common/Render/Text/draw_text_uwp.cpp
+--- a/Common/Render/Text/draw_text_uwp.cpp
++++ b/Common/Render/Text/draw_text_uwp.cpp
+@@ -11,7 +11,7 @@
+ #include "Common/StringUtils.h"
+ #include "Common/File/Path.h"
+ 
+-#if defined(_WIN32)
++#if defined(_WIN32) && !defined(__MINGW32__)
+ 
+ #include <string>
+ 
