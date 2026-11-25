@@ -42,6 +42,22 @@ For each patch:
 - First PSP6 core patch: cache the event-queue tail in `Core/CoreTiming.cpp`. Monotonic/equal-time insertions now append in O(1); out-of-order insertions retain the original sorted scan. Equal-time FIFO ordering is preserved, removal paths maintain the cache, and save-state loading rebuilds it without changing the serialized format.
 - Expected impact is limited to workloads that frequently schedule events at or after the current tail. No FPS or percentage gain is claimed before instrumented testing.
 
+## Windows MinGW build correctness
+
+- The Win32 GDI text drawer is selected for MinGW. The upstream Direct2D/DirectWrite drawer uses newer D2D/DirectWrite interfaces that are not consistently declared by MinGW-w64 SDK headers. MSVC/Windows builds retain the upstream modern drawer.
+- Static libraries are assembled with GCC's LTO-aware `gcc-ar` and `gcc-ranlib`; plain `ar`/`ranlib` can emit "plugin needed to handle lto object" warnings and fail to preserve the intended LTO archive handling.
+- These are build/toolchain compatibility fixes, not emulator-speed improvements. No speedup is claimed from them.
+
+## Next performance engineering stages
+
+1. **Establish a real baseline:** same PC, driver, game image, save state, rendering backend, resolution, frameskip, audio settings, and warm-up. Record emulation speed, median/p95 frame time, per-thread CPU time, GPU wait, audio underruns, and memory use.
+2. **MIPS/JIT hot path:** sample real game workloads; inspect dispatcher exits, block lookup, IR lowering, register allocation/spills, memory helpers, and branch linking. Keep optimizations only when JIT comparison and game tests remain clean.
+3. **GPU command path:** separate command decoding, vertex/index upload, driver submission, synchronization/readbacks, shader compilation, and texture-cache costs. Avoid trading accuracy for fewer draws.
+4. **Memory and scheduler:** profile PSP memory mapping/fastmem, cache behavior, event scheduling and idle skipping. Preserve MMU/protection behavior, callback ordering, and savestates.
+5. **Frame pacing/audio:** measure host waits and callback jitter separately from emulation time; optimize latency without allowing audio drift or frame pacing regressions.
+
+A claimed "2x" result requires a repeatable before/after benchmark on the same game workload. Compiler flags alone do not establish it.
+
 ## Target performance profiles
 
 - **Native (default):** `-march=native -mtune=native`; maximum host-CPU specialization, not intended for redistribution to older CPUs.
