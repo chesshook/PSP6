@@ -44,7 +44,7 @@ PSP6 prioritizes real frame-time and latency improvements while preserving PSP i
 
 ## Development status
 
-This repository currently contains the reproducible PSP6 source/build foundation. The pinned upstream source is not yet modified by PSP6 core patches, and the Windows build has not been executed in this environment. Subsequent optimization work should land as small, measurable patches with regression tests.
+This repository contains a pinned PPSSPP source baseline, a MinGW-native Release build, and the first PSP6 core patch. The build script applies the scheduler patch idempotently, compiles the Windows frontend plus headless/unit-test targets, runs the upstream unit tests, and packages the result as `dist/PSP6.exe`. This environment has not run the Windows GCC build, so the first compile and test result must be confirmed on the target PC.
 
 ## Updating upstream
 
