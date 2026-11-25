@@ -38,7 +38,8 @@ For each patch:
 - Pinned upstream: PPSSPP master revision `ee4594feff26e6a5c0bc2accfed19e9c5c117083`.
 - Release compiler profile: GCC `-O3`, LTO, dead-section elimination, and optional native CPU tuning.
 - Floating-point semantics remain conservative; no fast-math.
-- PSP6-specific emulator-core changes are not yet applied. The first step establishes a reproducible source and build baseline so subsequent core patches can be measured and bisected safely.
+- First PSP6 core patch: cache the event-queue tail in `Core/CoreTiming.cpp`. Monotonic/equal-time insertions now append in O(1); out-of-order insertions retain the original sorted scan. Equal-time FIFO ordering is preserved, removal paths maintain the cache, and save-state loading rebuilds it without changing the serialized format.
+- Expected impact is limited to workloads that frequently schedule events at or after the current tail. No FPS or percentage gain is claimed before instrumented testing.
 
 ## Target performance profiles
 
