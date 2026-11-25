@@ -1,0 +1,111 @@
+diff --git a/Core/CoreTiming.cpp b/Core/CoreTiming.cpp
+index fe7571f8a2a845f852777c6e1f1909cb06c0af35..PSP6 100644
+--- a/Core/CoreTiming.cpp
++++ b/Core/CoreTiming.cpp
+@@ -51,6 +51,7 @@ static std::set<int> restoredEventTypes;
+ static int nextEventTypeRestoreId = -1;
+ 
+ static Event *first;
++static Event *last;
+ static Event *eventPool = 0;
+ 
+ // Downcount has been moved to currentMIPS, to save a couple of clocks in every ARM JIT block
+@@ -215,6 +216,7 @@ void ClearPendingEvents()
+ 		FreeEvent(first);
+ 		first = e;
+ 	}
++	last = nullptr;
+ }
+ 
+ void AddEventToQueue(Event* ne)
+ {
++	// Scheduling at or after the tail is the common monotonic case. Keep the linked list
++	// (and its exact ordering semantics), but avoid rescanning it for those insertions.
++	if (!first) {
++		ne->next = nullptr;
++		first = last = ne;
++		return;
++	}
++	if (last && ne->time >= last->time) {
++		ne->next = nullptr;
++		last->next = ne;
++		last = ne;
++		return;
++	}
++
+ 	Event* prev = NULL;
+ 	Event** pNext = &first;
+ 	for(;;)
+ 	{
+ 		Event*& next = *pNext;
+ 		if(!next || ne->time < next->time)
+ 		{
+ 			ne->next = next;
+ 			next = ne;
++			if (!ne->next)
++				last = ne;
+ 			break;
+ 		}
+ 		prev = next;
+ 		pNext = &prev->next;
+@@ -253,8 +267,10 @@ s64 UnscheduleEvent(int event_type, u64 userdata)
+ 		}
+ 	}
+-	if (!first)
++	if (!first) {
++		last = nullptr;
+ 		return result;
++	}
+ 	Event *prev = first;
+ 	Event *ptr = prev->next;
+ 	while (ptr)
+@@ -263,6 +279,8 @@ s64 UnscheduleEvent(int event_type, u64 userdata)
+ 		{
+ 			result = ptr->time - GetTicks(currentMIPS);
+ 
++			if (ptr == last)
++				last = prev;
+ 			prev->next = ptr->next;
+ 			FreeEvent(ptr);
+ 			ptr = prev->next;
+@@ -299,8 +317,10 @@ void RemoveEvent(int event_type)
+ 		}
+ 	}
+-	if (!first)
++	if (!first) {
++		last = nullptr;
+ 		return;
++	}
+ 	Event *prev = first;
+ 	Event *ptr = prev->next;
+ 	while (ptr)
+@@ -309,6 +329,8 @@ void RemoveEvent(int event_type)
+ 		if (ptr->type == event_type)
+ 		{
++			if (ptr == last)
++				last = prev;
+ 			prev->next = ptr->next;
+ 			FreeEvent(ptr);
+ 			ptr = prev->next;
+@@ -327,6 +349,8 @@ void ProcessEvents() {
+ 			// INFO_LOG(Log::CPU, "%s (%lld, %lld) ", first->name ? first->name : "?", (u64)GetTicks(currentMIPS), (u64)first->time);
+ 			Event *evt = first;
+ 			first = first->next;
++			if (!first)
++				last = nullptr;
+ 			if (evt->type >= 0 && evt->type < (int)event_types.size()) {
+ 				PROFILE_THIS_SCOPE("event");
+ 				PROFILE_LABEL(event_types[evt->type].name);
+@@ -551,6 +575,12 @@ void DoState(PointerWrap &p) {
+ 		DoLinkedList<BaseEvent, GetNewEvent, FreeEvent, Event_DoStateOld>(p, first, (Event **)nullptr);
+ 		DoIgnoreUnusedLinkedList(p);
+ 	}
++	// The linked list is serialized, but the tail cache is intentionally not. Rebuild it
++	// after loading so the first post-load event insertion cannot use a stale pointer.
++	if (p.mode == PointerWrap::MODE_READ) {
++		last = first;
++		while (last && last->next)
++			last = last->next;
++	}
+ 
+ 	Do(p, CPU_HZ);
