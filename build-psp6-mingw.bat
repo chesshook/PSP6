@@ -113,22 +113,24 @@ if not exist "%BUILD_DIR%\PPSSPPWindows.exe" (
 )
 
 echo [PSP6] Checking static runtime linkage...
+set "PSP6_BAD_IMPORT="
 where objdump >nul 2>nul
 if errorlevel 1 (
     echo [WARNING] objdump not found; static runtime import audit skipped.
 ) else (
     objdump -p "%BUILD_DIR%\PPSSPPWindows.exe" > "%BUILD_DIR%\psp6-imports.txt"
-    set "PSP6_BAD_IMPORT="
     for %%D in (libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll SDL3.dll SDL3_ttf.dll zlib1.dll libpng16-16.dll) do (
         findstr /i /c:"DLL Name: %%D" "%BUILD_DIR%\psp6-imports.txt" >nul
         if not errorlevel 1 set "PSP6_BAD_IMPORT=1"
     )
-    if defined PSP6_BAD_IMPORT (
-        echo [ERROR] Unexpected runtime or optional DLL import found.
-        echo [ERROR] Check "%BUILD_DIR%\psp6-imports.txt".
-        exit /b 1
-    )
-    echo [PSP6] GCC runtime and optional SDL/zlib/libpng DLL checks passed.
+)
+if defined PSP6_BAD_IMPORT (
+    echo [ERROR] Unexpected runtime or optional DLL import found.
+    echo [ERROR] Check "%BUILD_DIR%\psp6-imports.txt".
+    exit /b 1
+)
+if exist "%BUILD_DIR%\psp6-imports.txt" (
+    echo [PSP6] Static runtime import checks passed.
 )
 
 echo.
@@ -154,6 +156,7 @@ if exist "%BUILD_DIR%\PPSSPPWindows.exe" (
 
 if exist "%BUILD_DIR%\PPSSPPHeadless.exe" copy /y "%BUILD_DIR%\PPSSPPHeadless.exe" "dist\PSP6Headless.exe" >nul
 if exist "%BUILD_DIR%\PPSSPPUnitTest.exe" copy /y "%BUILD_DIR%\PPSSPPUnitTest.exe" "dist\PSP6UnitTest.exe" >nul
+if exist "%BUILD_DIR%\psp6-imports.txt" copy /y "%BUILD_DIR%\psp6-imports.txt" "dist\PSP6-imports.txt" >nul
 
 robocopy "upstream\PPSSPP\assets" "dist\assets" /E /NFL /NDL /NJH /NJS /NC /NS >nul
 if errorlevel 8 (
