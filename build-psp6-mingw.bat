@@ -20,6 +20,8 @@ where cmake >nul 2>nul || (echo [ERROR] CMake was not found in PATH.& exit /b 1)
 where ninja >nul 2>nul || (echo [ERROR] Ninja was not found in PATH.& exit /b 1)
 where gcc >nul 2>nul || (echo [ERROR] MinGW GCC was not found in PATH.& exit /b 1)
 where g++ >nul 2>nul || (echo [ERROR] MinGW G++ was not found in PATH.& exit /b 1)
+where gcc-ar >nul 2>nul || (echo [ERROR] GCC LTO-aware archiver gcc-ar was not found in PATH.& exit /b 1)
+where gcc-ranlib >nul 2>nul || (echo [ERROR] GCC LTO-aware ranlib gcc-ranlib was not found in PATH.& exit /b 1)
 
 echo [PSP6] Compiler:
 g++ --version
@@ -55,6 +57,23 @@ if errorlevel 1 (
     echo [PSP6] Scheduler patch already applied.
 )
 
+echo [PSP6] Applying MinGW text backend compatibility patch...
+git -C "upstream\\PPSSPP" apply --reverse --check "..\\..\\patches\\0002-mingw-gdi-text-backend.patch" >nul 2>nul
+if errorlevel 1 (
+    git -C "upstream\\PPSSPP" apply --check "..\\..\\patches\\0002-mingw-gdi-text-backend.patch"
+    if errorlevel 1 (
+        echo [ERROR] MinGW text backend patch does not match the pinned upstream source.
+        exit /b 1
+    )
+    git -C "upstream\\PPSSPP" apply "..\\..\\patches\\0002-mingw-gdi-text-backend.patch"
+    if errorlevel 1 (
+        echo [ERROR] Failed to apply the MinGW text backend patch.
+        exit /b 1
+    )
+) else (
+    echo [PSP6] MinGW text backend patch already applied.
+)
+
 set "BUILD_DIR=build-mingw-native"
 set "TUNE_FLAGS=-march=native -mtune=native"
 if "%PSP6_PORTABLE%"=="1" (
@@ -72,6 +91,12 @@ cmake -S "upstream\PPSSPP" -B "%BUILD_DIR%" -G Ninja ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DCMAKE_C_COMPILER=gcc ^
   -DCMAKE_CXX_COMPILER=g++ ^
+  -DCMAKE_AR=gcc-ar ^
+  -DCMAKE_RANLIB=gcc-ranlib ^
+  -DCMAKE_C_COMPILER_AR=gcc-ar ^
+  -DCMAKE_CXX_COMPILER_AR=gcc-ar ^
+  -DCMAKE_C_COMPILER_RANLIB=gcc-ranlib ^
+  -DCMAKE_CXX_COMPILER_RANLIB=gcc-ranlib ^
   -DCMAKE_C_FLAGS_RELEASE="%OPT_FLAGS%" ^
   -DCMAKE_CXX_FLAGS_RELEASE="%OPT_FLAGS%" ^
   -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-flto=auto -Wl,--gc-sections -static -static-libgcc -static-libstdc++" ^
