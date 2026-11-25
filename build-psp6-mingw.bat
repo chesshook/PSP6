@@ -77,9 +77,19 @@ cmake -S "upstream\PPSSPP" -B "%BUILD_DIR%" -G Ninja ^
   -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-flto=auto -Wl,--gc-sections -static -static-libgcc -static-libstdc++" ^
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ^
   -DHEADLESS=ON ^
+  -DHEADLESS_CROSS=ON ^
   -DUNITTEST=ON ^
   -DATLAS_TOOL=OFF ^
-  -DUSE_CCACHE=OFF
+  -DUSE_CCACHE=OFF ^
+  -DUSE_SYSTEM_LIBPNG=OFF ^
+  -DUSE_SYSTEM_LIBZIP=OFF ^
+  -DUSE_SYSTEM_LIBCHDR=OFF ^
+  -DUSE_SYSTEM_ZSTD=OFF ^
+  -DUSE_SYSTEM_SNAPPY=OFF ^
+  -DUSE_SYSTEM_FFMPEG=OFF ^
+  -DUSE_SYSTEM_MINIUPNPC=OFF ^
+  -DUSE_SYSTEM_FREETYPE=OFF ^
+  -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
 if errorlevel 1 (
     echo [ERROR] CMake configuration failed.
     exit /b 1
@@ -97,6 +107,30 @@ if not exist "%BUILD_DIR%\PPSSPPUnitTest.exe" (
     echo [ERROR] PPSSPPUnitTest.exe was not produced.
     exit /b 1
 )
+if not exist "%BUILD_DIR%\PPSSPPWindows.exe" (
+    echo [ERROR] PPSSPPWindows.exe was not produced.
+    exit /b 1
+)
+
+echo [PSP6] Checking static runtime linkage...
+where objdump >nul 2>nul
+if errorlevel 1 (
+    echo [WARNING] objdump not found; static runtime import audit skipped.
+) else (
+    objdump -p "%BUILD_DIR%\PPSSPPWindows.exe" > "%BUILD_DIR%\psp6-imports.txt"
+    set "PSP6_BAD_IMPORT="
+    for %%D in (libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll SDL3.dll SDL3_ttf.dll zlib1.dll libpng16-16.dll) do (
+        findstr /i /c:"DLL Name: %%D" "%BUILD_DIR%\psp6-imports.txt" >nul
+        if not errorlevel 1 set "PSP6_BAD_IMPORT=1"
+    )
+    if defined PSP6_BAD_IMPORT (
+        echo [ERROR] Unexpected runtime or optional DLL import found.
+        echo [ERROR] Check "%BUILD_DIR%\psp6-imports.txt".
+        exit /b 1
+    )
+    echo [PSP6] GCC runtime and optional SDL/zlib/libpng DLL checks passed.
+)
+
 echo.
 echo [PSP6] Running PPSSPP unit tests...
 pushd "%BUILD_DIR%"
